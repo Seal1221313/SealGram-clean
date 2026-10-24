@@ -1,0 +1,252 @@
+name: SealGram APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, sealgram-fork]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@36e9a5af4eddb91fc11aec4c6f6f79b3cc0cb523
+        with:
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          preinstalled-runtimes: false
+          swap-storage: false
+
+      - name: Check disk space after cleanup
+        run: df -h /
+
+      - name: Add swap
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
+      - uses: actions/checkout@v4
+
+      - name: Fetch submodules (with retries)
+        run: |
+          set -e
+          for i in 1 2 3 4 5 6; do
+            git submodule sync --recursive
+            if git submodule update --init --recursive --depth 1 --jobs 4; then
+              exit 0
+            fi
+            echo "Submodule fetch failed (attempt $i), retrying in 20s"
+            sleep 20
+          done
+          exit 1
+
+      # TMessagesProj_Modules/media is declared in .gitmodules, but the
+      # current main tree may not contain its gitlink. Ensure Gradle's
+      # core_settings.gradle exists before evaluating settings.gradle.
+      - name: Ensure media module is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODULE_DIR="TMessagesProj_Modules/media"
+          SETTINGS_FILE="$MODULE_DIR/core_settings.gradle"
+          if [ ! -f "$SETTINGS_FILE" ]; then
+            echo "Media submodule missing or incomplete; fetching upstream module."
+            rm -rf "$MODULE_DIR"
+            mkdir -p TMessagesProj_Modules
+            # Use the Telegram-compatible Media3 branch pinned by the upstream Telegram
+            # repository, not the repository's default "release" branch.
+            git clone --depth 1 --branch telegram-v1.10.1-ffmpeg https://github.com/Arseny271/media.git "$MODULE_DIR"
+          fi
+          test -f "$SETTINGS_FILE" || {
+            echo "::error::Media module clone did not provide $SETTINGS_FILE"
+            exit 1
+          }
+
+      # The project includes jlatexmath as a git submodule. Some checkouts may
+      # leave it empty or at an incompatible revision; restore the expected Android branch.
+      - name: Ensure jlatexmath module is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODULE_DIR="TMessagesProj/lib/jlatexmath"
+          BUILD_FILE="$MODULE_DIR/jlatexmath/build.gradle"
+          if [ ! -f "$BUILD_FILE" ]; then
+            echo "JLatexMath submodule missing or incomplete; fetching Android branch."
+            rm -rf "$MODULE_DIR"
+            mkdir -p TMessagesProj/lib
+            git clone --depth 1 --branch android https://github.com/dkaraush/jlatexmath-android.git "$MODULE_DIR"
+          fi
+          test -f "$BUILD_FILE" || {
+            echo "::error::JLatexMath clone did not provide $BUILD_FILE"
+            exit 1
+          }
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure persistent release signing
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$RELEASE_KEYSTORE_BASE64" || { echo "::error::Missing RELEASE_KEYSTORE_BASE64 secret"; exit 1; }
+          test -n "$RELEASE_STORE_PASSWORD" || { echo "::error::Missing RELEASE_STORE_PASSWORD secret"; exit 1; }
+          test -n "$RELEASE_KEY_PASSWORD" || { echo "::error::Missing RELEASE_KEY_PASSWORD secret"; exit 1; }
+          test -n "$RELEASE_KEY_ALIAS" || { echo "::error::Missing RELEASE_KEY_ALIAS secret"; exit 1; }
+          mkdir -p TMessagesProj/config
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > TMessagesProj/config/release.keystore
+          chmod 600 TMessagesProj/config/release.keystore
+          {
+            printf 'RELEASE_STORE_PASSWORD=%s\n' "$RELEASE_STORE_PASSWORD"
+            printf 'RELEASE_KEY_PASSWORD=%s\n' "$RELEASE_KEY_PASSWORD"
+            printf 'RELEASE_KEY_ALIAS=%s\n' "$RELEASE_KEY_ALIAS"
+            printf 'ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD=%s\n' "$RELEASE_STORE_PASSWORD"
+            printf 'ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD=%s\n' "$RELEASE_KEY_PASSWORD"
+            printf 'ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS=%s\n' "$RELEASE_KEY_ALIAS"
+          } >> "$GITHUB_ENV"
+          echo "::add-mask::$RELEASE_STORE_PASSWORD"
+          echo "::add-mask::$RELEASE_KEY_PASSWORD"
+
+      - name: Install Android SDK components
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"             "platforms;android-36" "build-tools;36.0.0"             "ndk;27.2.12479018" "cmake;3.22.1" >/dev/null
+
+      - name: Inject Telegram API credentials
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+        run: |
+          set -euo pipefail
+          F=TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+          if [ -n "$TG_API_ID" ] && [ -n "$TG_API_HASH" ]; then
+            sed -i "s/public static int APP_ID = 0;/public static int APP_ID = $TG_API_ID;/" "$F"
+            sed -i "s#public static String APP_HASH = \"\";#public static String APP_HASH = \"$TG_API_HASH\";#" "$F"
+          else
+            echo "::warning::TG_API_ID / TG_API_HASH secrets not set - build may not be able to log in"
+          fi
+
+      - name: Apply TLRPC patch
+        run: |
+          set -euo pipefail
+          python3 TMessagesProj/src/main/java/org/telegram/messenger/tlrpc-patch.py
+          grep -q 'public boolean ayuDeleted;' TMessagesProj/src/main/java/org/telegram/tgnet/TLRPC.java
+
+      - name: Build arm64 + armv7 (low-end 32-bit devices)
+        run: sed -i 's/abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"/abiFilters "armeabi-v7a", "arm64-v8a"/' TMessagesProj_App/build.gradle
+
+      - name: Install ccache
+        run: sudo apt-get install -y ccache >/dev/null
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('TMessagesProj/jni/**', 'TMessagesProj/build.gradle', 'TMessagesProj_App/build.gradle') }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.ref_name }}-
+            ccache-${{ runner.os }}-
+
+      - name: Limit ccache size
+        run: |
+          ccache -M 2G
+          ccache -s
+          df -h /
+
+      - name: Enable ccache for native build
+        run: sed -i "s/'-DANDROID_STL=c++_static',/'-DANDROID_STL=c++_static', '-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache',/" TMessagesProj/build.gradle TMessagesProj_App/build.gradle
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Build APK
+        env:
+          # Supply the project properties normally provided by a developer's local Gradle setup.
+          # Use the workflow run number so each CI build has a monotonically increasing versionCode.
+          APP_VERSION_NAME: "1.0.${{ github.run_number }}"
+          APP_VERSION_CODE: "${{ github.run_number }}"
+          APP_PACKAGE: "org.sealgram.messenger"
+          ORG_GRADLE_PROJECT_APP_VERSION_NAME: "1.0.${{ github.run_number }}"
+          ORG_GRADLE_PROJECT_APP_VERSION_CODE: "${{ github.run_number }}"
+          ORG_GRADLE_PROJECT_APP_PACKAGE: "org.sealgram.messenger"
+          CCACHE_DIR: /home/runner/.ccache
+          CCACHE_MAXSIZE: 2G
+          CCACHE_COMPILERCHECK: content
+          CCACHE_NOHASHDIR: "true"
+          CCACHE_BASEDIR: ${{ github.workspace }}
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew :TMessagesProj_App:assembleAfatRelease --no-daemon --build-cache --stacktrace 2>&1 | tee /tmp/build.log
+          ccache -s || true
+
+      - name: Report compile errors
+        if: failure()
+        run: |
+          msg=$(grep -E "error:|What went wrong|cannot find symbol|Execution failed" -A4 /tmp/build.log | head -60 | cut -c1-300 || true)
+          msg="${msg//'%'/'%25'}"
+          msg="${msg//$'\n'/'%0A'}"
+          echo "::error title=Build errors::${msg}"
+
+      - name: Trim ccache before saving
+        if: always()
+        run: |
+          ccache -M 2G || true
+          ccache -c || true
+          ccache -s || true
+          df -h /
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('TMessagesProj/jni/**', 'TMessagesProj/build.gradle', 'TMessagesProj_App/build.gradle') }}-${{ github.run_id }}
+
+      - name: Verify APK
+        run: |
+          set -euo pipefail
+          APK=$(find TMessagesProj_App/build/outputs/apk -name '*.apk' | head -1)
+          test -n "$APK"
+          unzip -tq "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/apk-signing.txt
+          grep -q '^Signer #1 certificate SHA-256 digest:' /tmp/apk-signing.txt
+          mkdir dist
+          cp "$APK" dist/SealGram.apk
+          # Keep R8/ProGuard mapping so obfuscated release crashes can be decoded.
+          MAPPING="TMessagesProj_App/build/outputs/mapping/afatRelease/mapping.txt"
+          if [ -f "$MAPPING" ]; then
+            cp "$MAPPING" dist/SealGram-mapping.txt
+          else
+            echo "::warning::R8 mapping file not found at $MAPPING"
+          fi
+          sha256sum dist/SealGram.apk | tee dist/SealGram.apk.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SealGram-apk
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

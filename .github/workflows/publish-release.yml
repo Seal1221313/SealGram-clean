@@ -1,0 +1,42 @@
+name: Publish APK release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Build run id to publish
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SealGram-apk
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: art
+
+      - name: Verify APK
+        run: |
+          find art -type f
+          APK=$(find art -name '*.apk' | head -1)
+          unzip -tq "$APK"
+          mkdir dist
+          cp "$APK" dist/SealGram.apk
+          sha256sum dist/SealGram.apk | tee dist/SealGram.apk.sha256
+          ls -l dist
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create latest dist/SealGram.apk dist/SealGram.apk.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "SealGram latest build" --notes "Unofficial client. Direct APK, no zip."

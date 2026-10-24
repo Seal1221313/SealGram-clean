@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="AppName">SealGram</string>
+    <string name="AppNameBeta">SealGram Beta</string>
+    <string name="LanguageName">Қазақша</string>
+    <string name="English">Ағылшын</string>
+    <string name="LanguageNameInEnglish">Kazakh</string>
+    <string name="LanguageCode">kk</string>
+    <string name="ContinueOnThisLanguage">Қазақ тілінде жалғастыру</string>
+</resources>
