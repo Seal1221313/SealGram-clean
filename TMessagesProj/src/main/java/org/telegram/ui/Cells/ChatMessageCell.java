@@ -18475,7 +18475,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
                 timeString = LocaleController.formatPmEditedDate(editDate);
             } else {
-                timeString = (getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000));
+                timeString = (org.telegram.messenger.SealGram.strPref("mark_edited", getString(R.string.EditedMessage)) + " " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000));
             }
         } else if (currentMessageObject.isSaved && currentMessageObject.messageOwner.fwd_from != null && (currentMessageObject.messageOwner.fwd_from.date != 0 || currentMessageObject.messageOwner.fwd_from.saved_date != 0)) {
             int date = currentMessageObject.messageOwner.fwd_from.saved_date;
@@ -18501,7 +18501,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentTimeString = timeString;
         }
         if (org.telegram.messenger.SealGram.pref("keep_trash", true) && org.telegram.messenger.SealKeep.isKept(currentMessageObject)) {
-            currentTimeString = TextUtils.concat(org.telegram.messenger.SealTrash.prefix(Theme.chat_timePaint), currentTimeString);
+            currentTimeString = TextUtils.concat(org.telegram.messenger.SealTrash.mark(Theme.chat_timePaint), currentTimeString);
         }
         if (currentMessageObject.isStakedDice()) {
             currentTimeString = TextUtils.concat("💎", StarsIntroActivity.formatTON(currentMessageObject.getStakedDiceAmount()), "  ", currentTimeString);

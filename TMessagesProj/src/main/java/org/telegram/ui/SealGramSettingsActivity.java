@@ -42,6 +42,7 @@ public class SealGramSettingsActivity extends BaseFragment {
         SealGramHubActivity.toggle(context, c, SealGramI18n.t("PrivacyHideOnline"), SealGramI18n.t("PrivacyHideOnlineDesc"), SealGram.getSub("ghost_online"), v -> SealGram.setSub("ghost_online", v));
         SealGramHubActivity.toggle(context, c, SealGramI18n.t("PrivacyHideTyping"), SealGramI18n.t("PrivacyHideTypingDesc"), SealGram.getSub("ghost_typing"), v -> SealGram.setSub("ghost_typing", v));
         SealGramHubActivity.toggle(context, c, SealGramI18n.t("PrivacyHideRead"), SealGramI18n.t("PrivacyHideReadDesc"), SealGram.getSub("ghost_read"), v -> SealGram.setSub("ghost_read", v));
+        SealGramHubActivity.toggle(context, c, SealGramI18n.t("ReadAfterSend"), SealGramI18n.t("ReadAfterSendDesc"), SealGram.pref("read_after_send", true), v -> SealGram.setPref("read_after_send", v));
         SealGramHubActivity.toggle(context, c, SealGramI18n.t("GhostDelay"), SealGramI18n.t("GhostDelayDesc"), SealGram.pref("ghost_delay", false), v -> SealGram.setPref("ghost_delay", v));
         SealGramHubActivity.row(context, c, R.drawable.msg_edit, SealGramI18n.t("GhostDelayWait"), String.format(SealGramI18n.t("SecN"), Math.max(12, SealGram.intPref("ghost_delay_sec", 12))), () -> {
             final int[] secs = {12, 30, 60, 300};

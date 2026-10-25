@@ -37654,6 +37654,8 @@ public class ChatActivity extends BaseFragment implements
                 });
             } else if (viewType == 4) {
                 view = new ChatLoadingCell(mContext, contentView, themeDelegate);
+            } else if (viewType == -1000) {
+                view = new org.telegram.ui.Components.SealHiddenView(mContext);
             } else if (viewType == 6) {
                 view = new UserInfoCell(mContext, currentAccount, themeDelegate);
             } else if (viewType == 7) {
@@ -38300,7 +38302,11 @@ public class ChatActivity extends BaseFragment implements
                 } else {
                     messages = ChatActivity.this.messages;
                 }
-                return messages.get(position - messagesStartRow).contentType;
+                MessageObject sealMsg = messages.get(position - messagesStartRow);
+                if (org.telegram.messenger.SealFilter.hides(sealMsg, currentChat)) {
+                    return -1000;
+                }
+                return sealMsg.contentType;
             } else if (position == botInfoRow) {
                 return 3;
             } else if (position == userInfoRow) {

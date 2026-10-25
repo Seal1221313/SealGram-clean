@@ -111,6 +111,55 @@ public class SealGram {
         return prefs().getInt(key, def);
     }
 
+    public static String strPref(String key, String def) {
+        String v = prefs().getString(key, null);
+        return v == null || v.isEmpty() ? def : v;
+    }
+
+    public static void setStrPref(String key, String value) {
+        prefs().edit().putString(key, value == null ? "" : value).apply();
+    }
+
+    private static final java.util.HashMap<String, Integer> readSent = new java.util.HashMap<>();
+
+    public static void readAfterSend(int account, long dialogId) {
+        try {
+            if (!ghostRead() || !pref("read_after_send", true)) return;
+            if (dialogId == 0 || DialogObject.isEncryptedDialog(dialogId)) return;
+            final MessagesController mc = MessagesController.getInstance(account);
+            TLRPC.Dialog d = mc.dialogs_dict.get(dialogId);
+            if (d == null || d.top_message <= 0) return;
+            final int maxId = d.top_message;
+            String key = account + "_" + dialogId;
+            synchronized (readSent) {
+                Integer prev = readSent.get(key);
+                if (prev != null && prev >= maxId) return;
+                readSent.put(key, maxId);
+            }
+            if (mc.getInputPeer(dialogId) == null) return;
+            ConnectionsManager cm = ConnectionsManager.getInstance(account);
+            TLRPC.Chat chat = dialogId < 0 ? mc.getChat(-dialogId) : null;
+            if (chat != null && ChatObject.isChannel(chat)) {
+                TLRPC.TL_channels_readHistory req = new TLRPC.TL_channels_readHistory();
+                req.channel = mc.getInputChannel(-dialogId);
+                req.max_id = maxId;
+                cm.sendRequest(req, (response, error) -> {
+                });
+            } else {
+                TLRPC.TL_messages_readHistory req = new TLRPC.TL_messages_readHistory();
+                req.peer = mc.getInputPeer(dialogId);
+                req.max_id = maxId;
+                cm.sendRequest(req, (response, error) -> {
+                    if (error == null && response instanceof TLRPC.TL_messages_affectedMessages) {
+                        TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
+                        mc.processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
+                    }
+                });
+            }
+        } catch (Throwable ignore) {
+        }
+    }
+
     public static void setIntPref(String key, int value) {
         prefs().edit().putInt(key, value).apply();
     }
