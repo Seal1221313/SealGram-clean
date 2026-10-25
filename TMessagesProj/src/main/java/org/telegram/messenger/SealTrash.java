@@ -24,6 +24,11 @@ public final class SealTrash {
         return base;
     }
 
+    public static CharSequence mark(Paint paint) {
+        String t = SealGram.strPref("mark_deleted", "");
+        return t.isEmpty() ? prefix(paint) : t + " ";
+    }
+
     public static CharSequence prefix(Paint paint) {
         float w = paint.measureText("\u2007");
         if (w <= 0) w = paint.getTextSize() * 0.5f;

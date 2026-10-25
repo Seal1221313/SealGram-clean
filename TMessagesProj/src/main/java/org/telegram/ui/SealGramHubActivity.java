@@ -298,6 +298,9 @@ public class SealGramHubActivity extends BaseFragment {
                 toggle(ctx, c, SealGramI18n.t("HubNoNextChannel"), SealGramI18n.t("HubNoNextChannelDesc"), SealGram.pref("no_jump", false), v -> SealGram.setPref("no_jump", v));
                 toggle(ctx, c, SealGramI18n.t("HubCommaAfterMention"), SealGramI18n.t("HubCommaAfterMentionDesc"), SealGram.pref("comma_mention", false), v -> SealGram.setPref("comma_mention", v));
                 toggle(ctx, c, SealGramI18n.t("HubTimeSeconds"), SealGramI18n.t("HubTimeSecondsDesc"), SealGram.pref("time_seconds", false), v -> SealGram.setPref("time_seconds", v));
+                toggle(ctx, c, SealGramI18n.t("HubRegexEnabled"), SealGramI18n.t("HubRegexEnabledDesc"), SealGram.pref("regex_enabled", false), v -> SealGram.setPref("regex_enabled", v));
+                toggle(ctx, c, SealGramI18n.t("HubRegexChats"), SealGramI18n.t("HubRegexChatsDesc"), SealGram.pref("regex_chats", false), v -> SealGram.setPref("regex_chats", v));
+                row(ctx, c, R.drawable.msg_edit, SealGramI18n.t("HubRegexFilters"), String.valueOf(org.telegram.messenger.SealFilter.count()), this::editRegex);
             } else if (page == 4) {
                 noteText = SealGramI18n.t("HubVoiceToTextNote");
                 fillStt(c);
@@ -473,6 +476,26 @@ public class SealGramHubActivity extends BaseFragment {
                             SealAutoReply.setText(t);
                             fill();
                         }
+                    })
+                    .setNegativeButton(SealGramI18n.t("CommonCancel"), null)
+                    .show();
+        }
+
+        private void editRegex() {
+            EditText et = new EditText(ctx);
+            et.setText(org.telegram.messenger.SealFilter.raw());
+            et.setHint(SealGramI18n.t("RegexEditHint"));
+            et.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            et.setHintTextColor(Theme.getColor(Theme.key_dialogTextHint));
+            et.setMinLines(4);
+            et.setGravity(Gravity.TOP);
+            et.setPadding(AndroidUtilities.dp(22), AndroidUtilities.dp(8), AndroidUtilities.dp(22), AndroidUtilities.dp(8));
+            new AlertDialog.Builder(ctx)
+                    .setTitle(SealGramI18n.t("HubRegexFilters"))
+                    .setView(et)
+                    .setPositiveButton(SealGramI18n.t("CommonSave"), (d, w) -> {
+                        org.telegram.messenger.SealFilter.setRaw(et.getText().toString());
+                        fill();
                     })
                     .setNegativeButton(SealGramI18n.t("CommonCancel"), null)
                     .show();

@@ -271,6 +271,18 @@ public final class SealGramI18n {
         add("MessageDetailsVia", "Via bot ID: %1$d", "Через бота ID: %1$d", "Через бота ID: %1$d", "Бот ID арқылы: %1$d");
         add("MessageDetailsGroup", "Album ID: %1$d", "ID альбома: %1$d", "ID альбому: %1$d", "Альбом ID: %1$d");
         add("MessageDetailsDc", "Data center: DC%1$d", "Дата-центр: DC%1$d", "Дата-центр: DC%1$d", "Дата-орталық: DC%1$d");
+        add("HubRegexEnabled", "Hide messages by regex", "Скрывать сообщения по regex", "Ховати повідомлення за regex", "Хабарламаларды regex бойынша жасыру");
+        add("HubRegexEnabledDesc", "Messages that match your patterns collapse to nothing. Works in channels by default.", "Сообщения, подходящие под шаблоны, схлопываются. По умолчанию работает в каналах.", "Повідомлення, що підходять під шаблони, згортаються. За замовчуванням працює в каналах.", "Үлгіге сәйкес хабарламалар жасырылады. Әдепкіде арналарда жұмыс істейді.");
+        add("HubRegexChats", "Also in groups and private chats", "Также в группах и личных чатах", "Також у групах та особистих чатах", "Топтар мен жеке чаттарда да");
+        add("HubRegexChatsDesc", "Off: only channels are filtered.", "Выключено: фильтруются только каналы.", "Вимкнено: фільтруються лише канали.", "Өшірулі: тек арналар сүзіледі.");
+        add("HubRegexFilters", "Regex patterns", "Regex-шаблоны", "Regex-шаблони", "Regex үлгілері");
+        add("RegexEditHint", "One regex per line", "Один regex на строку", "Один regex на рядок", "Әр жолға бір regex");
+        add("MarkDeleted", "Deleted mark", "Метка «удалено»", "Мітка «видалено»", "«Жойылған» белгісі");
+        add("MarkEdited", "Edited mark", "Метка «изменено»", "Мітка «змінено»", "«Өзгертілген» белгісі");
+        add("MarkDefault", "Default", "По умолчанию", "За замовчуванням", "Әдепкі");
+        add("MarkReset", "Reset", "Сбросить", "Скинути", "Қалпына келтіру");
+        add("ReadAfterSend", "Read after sending", "Прочитано после отправки", "Прочитано після надсилання", "Жібергеннен кейін оқылды");
+        add("ReadAfterSendDesc", "In ghost mode, sending a message in a chat marks it as read, like in AyuGram.", "В режиме призрака отправка сообщения в чате отмечает его прочитанным, как в AyuGram.", "У режимі привида надсилання повідомлення в чаті позначає його прочитаним, як в AyuGram.", "Елес режимінде чатқа хабарлама жіберу оны оқылған деп белгілейді, AyuGram сияқты.");
         add("ChatJumpToStart", "Go to earliest available message", "К самому раннему доступному сообщению", "До найранішого доступного повідомлення", "Ең ерте қолжетімді хабарламаға өту");
         add("AdminTools", "Admin tools", "Инструменты администратора", "Інструменти адміністратора", "Әкімші құралдары");
         add("AdminToolsTitle", "Chat moderation", "Модерация чата", "Модерація чату", "Чатты басқару");

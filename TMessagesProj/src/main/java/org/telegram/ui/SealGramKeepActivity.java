@@ -77,6 +77,9 @@ public class SealGramKeepActivity extends BaseFragment {
                     render();
                 }));
 
+        SealGramHubActivity.row(ctx, l, R.drawable.msg_edit, SealGramI18n.t("MarkDeleted"), markLabel("mark_deleted"), () -> editMark("mark_deleted", "MarkDeleted"));
+        SealGramHubActivity.row(ctx, l, R.drawable.msg_edit, SealGramI18n.t("MarkEdited"), markLabel("mark_edited"), () -> editMark("mark_edited", "MarkEdited"));
+
         SealGramHubActivity.header(ctx, root, SealGramI18n.t("KeepStorage"));
         LinearLayout s = SealGramHubActivity.card(ctx, root);
         SealGramHubActivity.row(ctx, s, R.drawable.msg_delete, SealGramI18n.t("KeepDays"), daysLabel(SealKeep.days()), this::pickDays);
@@ -93,6 +96,36 @@ public class SealGramKeepActivity extends BaseFragment {
             ApplicationLoader.startPushService();
         });
         SealGramHubActivity.toggle(ctx, b, SealGramI18n.t("KeepAutostart"), SealGramI18n.t("KeepAutostartDesc"), SealGram.pref("keep_autostart", false), v -> SealGram.setPref("keep_autostart", v));
+    }
+
+    private String markLabel(String key) {
+        String v = SealGram.strPref(key, "");
+        return v.isEmpty() ? SealGramI18n.t("MarkDefault") : v;
+    }
+
+    private void editMark(String key, String titleKey) {
+        Activity a = getParentActivity();
+        if (a == null) return;
+        android.widget.EditText et = new android.widget.EditText(a);
+        et.setSingleLine(true);
+        et.setText(SealGram.strPref(key, ""));
+        et.setHint(SealGramI18n.t("MarkDefault"));
+        et.setTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextBlack));
+        et.setHintTextColor(org.telegram.ui.ActionBar.Theme.getColor(org.telegram.ui.ActionBar.Theme.key_dialogTextHint));
+        et.setPadding(AndroidUtilities.dp(22), AndroidUtilities.dp(8), AndroidUtilities.dp(22), AndroidUtilities.dp(8));
+        new AlertDialog.Builder(a)
+                .setTitle(SealGramI18n.t(titleKey))
+                .setView(et)
+                .setPositiveButton(SealGramI18n.t("CommonSave"), (d, w) -> {
+                    SealGram.setStrPref(key, et.getText().toString().trim());
+                    render();
+                })
+                .setNeutralButton(SealGramI18n.t("MarkReset"), (d, w) -> {
+                    SealGram.setStrPref(key, "");
+                    render();
+                })
+                .setNegativeButton(SealGramI18n.t("CommonCancel"), null)
+                .show();
     }
 
     private void pickDays() {
