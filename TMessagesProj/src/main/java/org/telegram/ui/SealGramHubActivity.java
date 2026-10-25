@@ -297,6 +297,7 @@ public class SealGramHubActivity extends BaseFragment {
                 toggle(ctx, c, SealGramI18n.t("HubHideKeyboardScroll"), null, SealGram.pref("hide_kb_scroll", false), v -> SealGram.setPref("hide_kb_scroll", v));
                 toggle(ctx, c, SealGramI18n.t("HubNoNextChannel"), SealGramI18n.t("HubNoNextChannelDesc"), SealGram.pref("no_jump", false), v -> SealGram.setPref("no_jump", v));
                 toggle(ctx, c, SealGramI18n.t("HubCommaAfterMention"), SealGramI18n.t("HubCommaAfterMentionDesc"), SealGram.pref("comma_mention", false), v -> SealGram.setPref("comma_mention", v));
+                toggle(ctx, c, SealGramI18n.t("HubTimeSeconds"), SealGramI18n.t("HubTimeSecondsDesc"), SealGram.pref("time_seconds", false), v -> SealGram.setPref("time_seconds", v));
             } else if (page == 4) {
                 noteText = SealGramI18n.t("HubVoiceToTextNote");
                 fillStt(c);

@@ -33449,8 +33449,16 @@ public class ChatActivity extends BaseFragment implements
         StringBuilder details = new StringBuilder();
         details.append(SealGramI18n.format("MessageDetailsId", message.getId())).append('\n');
         details.append(SealGramI18n.format("MessageDetailsChatId", message.getDialogId())).append('\n');
-        String date = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date(message.messageOwner.date * 1000L));
+        java.text.SimpleDateFormat sealFmt = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
+        String date = sealFmt.format(new java.util.Date(message.messageOwner.date * 1000L));
         details.append(SealGramI18n.format("MessageDetailsDate", date)).append('\n');
+        long sealSender = message.getFromChatId();
+        if (sealSender != 0) details.append(SealGramI18n.format("MessageDetailsSender", sealSender)).append('\n');
+        if (message.messageOwner.edit_date != 0) details.append(SealGramI18n.format("MessageDetailsEdited", sealFmt.format(new java.util.Date(message.messageOwner.edit_date * 1000L)))).append('\n');
+        if (message.messageOwner.fwd_from != null && message.messageOwner.fwd_from.date != 0) details.append(SealGramI18n.format("MessageDetailsFwdDate", sealFmt.format(new java.util.Date(message.messageOwner.fwd_from.date * 1000L)))).append('\n');
+        if (message.messageOwner.views > 0 || message.messageOwner.forwards > 0) details.append(SealGramI18n.format("MessageDetailsViews", message.messageOwner.views, message.messageOwner.forwards)).append('\n');
+        if (message.messageOwner.via_bot_id != 0) details.append(SealGramI18n.format("MessageDetailsVia", message.messageOwner.via_bot_id)).append('\n');
+        if (message.messageOwner.grouped_id != 0) details.append(SealGramI18n.format("MessageDetailsGroup", message.messageOwner.grouped_id)).append('\n');
         String mediaKind = SealGramI18n.t("MessageMediaOther"), mime = null;
         long sizeBytes = -1;
         int width = 0, height = 0;
@@ -33477,6 +33485,10 @@ public class ChatActivity extends BaseFragment implements
         if (!TextUtils.isEmpty(mime)) details.append(SealGramI18n.format("MessageDetailsMime", mime)).append('\n');
         if (sizeBytes >= 0) details.append(SealGramI18n.format("MessageDetailsSize", sizeBytes)).append('\n');
         if (width > 0 && height > 0) details.append(SealGramI18n.format("MessageDetailsDimensions", width, height)).append('\n');
+        int sealDc = 0;
+        if (document != null) sealDc = document.dc_id;
+        else if (message.messageOwner.media instanceof TLRPC.TL_messageMediaPhoto && message.messageOwner.media.photo != null) sealDc = message.messageOwner.media.photo.dc_id;
+        if (sealDc != 0) details.append(SealGramI18n.format("MessageDetailsDc", sealDc)).append('\n');
         int replyId = message.getReplyMsgId();
         if (replyId != 0) details.append(SealGramI18n.format("MessageDetailsReply", replyId)).append('\n');
         details.append(SealGramI18n.format("MessageDetailsForwarded", SealGramI18n.t(message.isForwarded() ? "MessageDetailsYes" : "MessageDetailsNo")));

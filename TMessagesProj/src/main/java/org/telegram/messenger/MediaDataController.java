@@ -5028,6 +5028,7 @@ public class MediaDataController extends BaseController {
                     List<ShortcutInfoCompat> currentShortcuts = ShortcutManagerCompat.getDynamicShortcuts(ApplicationLoader.applicationContext);
                     if (currentShortcuts != null && !currentShortcuts.isEmpty()) {
                         newShortcutsIds.add("compose");
+                        newShortcutsIds.add("ghost_mode");
                         for (int a = 0; a < hintsFinal.size(); a++) {
                             TLRPC.TL_topPeer hint = hintsFinal.get(a);
                             newShortcutsIds.add("did3_" + MessageObject.getPeerId(hint.peer));
@@ -5046,6 +5047,27 @@ public class MediaDataController extends BaseController {
 
                     if (!shortcutsToDelete.isEmpty()) {
                         ShortcutManagerCompat.removeDynamicShortcuts(ApplicationLoader.applicationContext, shortcutsToDelete);
+                    }
+                }
+
+                Intent sealGhostIntent = new Intent(ApplicationLoader.applicationContext, LaunchActivity.class);
+                sealGhostIntent.setAction("ghost_mode");
+                ShortcutInfoCompat sealGhostShortcut = new ShortcutInfoCompat.Builder(ApplicationLoader.applicationContext, "ghost_mode")
+                        .setShortLabel(SealGramI18n.t("GhostShortcut"))
+                        .setLongLabel(SealGramI18n.t("GhostShortcut"))
+                        .setIcon(IconCompat.createWithResource(ApplicationLoader.applicationContext, R.drawable.ghost))
+                        .setRank(0)
+                        .setIntent(sealGhostIntent)
+                        .build();
+                if (recreateShortcuts) {
+                    ShortcutManagerCompat.pushDynamicShortcut(ApplicationLoader.applicationContext, sealGhostShortcut);
+                } else {
+                    ArrayList<ShortcutInfoCompat> sealGhostList = new ArrayList<>();
+                    sealGhostList.add(sealGhostShortcut);
+                    if (shortcutsToUpdate.contains("ghost_mode")) {
+                        ShortcutManagerCompat.updateShortcuts(ApplicationLoader.applicationContext, sealGhostList);
+                    } else {
+                        ShortcutManagerCompat.addDynamicShortcuts(ApplicationLoader.applicationContext, sealGhostList);
                     }
                 }
 

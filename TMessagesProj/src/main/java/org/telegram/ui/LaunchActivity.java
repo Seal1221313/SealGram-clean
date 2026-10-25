@@ -2877,6 +2877,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     }
                 } else if (intent.getAction().equals("org.telegram.messenger.OPEN_ACCOUNT")) {
                     open_settings = 1;
+                } else if (intent.getAction().equals("ghost_mode")) {
+                    boolean sealGhostOn = !org.telegram.messenger.SealGram.ghost();
+                    org.telegram.messenger.SealGram.setGhost(sealGhostOn);
+                    intent.setAction(Intent.ACTION_MAIN);
+                    android.widget.Toast.makeText(this, org.telegram.messenger.SealGramI18n.t(sealGhostOn ? "GhostToggledOn" : "GhostToggledOff"), android.widget.Toast.LENGTH_SHORT).show();
                 } else if (intent.getAction().equals("new_dialog")) {
                     open_new_dialog = 1;
                 } else if (intent.getAction().startsWith("com.tmessages.openchat")) {

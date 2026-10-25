@@ -259,6 +259,18 @@ public final class SealGramI18n {
         add("MessageDetailsForwarded", "Forwarded: %1$s", "Переслано: %1$s", "Переслано: %1$s", "Жіберілген: %1$s");
         add("MessageDetailsYes", "Yes", "Да", "Так", "Иә");
         add("MessageDetailsNo", "No", "Нет", "Ні", "Жоқ");
+        add("GhostShortcut", "Ghost mode", "Режим призрака", "Режим привида", "Елес режимі");
+        add("GhostToggledOn", "Ghost mode on", "Режим призрака включён", "Режим привида увімкнено", "Елес режимі қосулы");
+        add("GhostToggledOff", "Ghost mode off", "Режим призрака выключен", "Режим привида вимкнено", "Елес режимі өшірулі");
+        add("HubTimeSeconds", "Seconds in message time", "Секунды во времени сообщений", "Секунди в часі повідомлень", "Хабарлама уақытындағы секундтар");
+        add("HubTimeSecondsDesc", "Shows the exact send time down to the second in every message bubble. Reopen the chat to apply.", "Показывает точное время отправки до секунды в каждом сообщении. Переоткрой чат, чтобы применить.", "Показує точний час надсилання до секунди в кожному повідомленні. Перевідкрий чат, щоб застосувати.", "Әр хабарламада жіберу уақытын секундқа дейін көрсетеді. Қолдану үшін чатты қайта ашыңыз.");
+        add("MessageDetailsSender", "Sender ID: %1$d", "ID отправителя: %1$d", "ID відправника: %1$d", "Жіберуші ID: %1$d");
+        add("MessageDetailsEdited", "Edited: %1$s", "Изменено: %1$s", "Змінено: %1$s", "Өзгертілген: %1$s");
+        add("MessageDetailsFwdDate", "Original date: %1$s", "Оригинальная дата: %1$s", "Оригінальна дата: %1$s", "Түпнұсқа күні: %1$s");
+        add("MessageDetailsViews", "Views: %1$d, forwards: %2$d", "Просмотры: %1$d, пересылки: %2$d", "Перегляди: %1$d, пересилання: %2$d", "Қаралым: %1$d, жіберу: %2$d");
+        add("MessageDetailsVia", "Via bot ID: %1$d", "Через бота ID: %1$d", "Через бота ID: %1$d", "Бот ID арқылы: %1$d");
+        add("MessageDetailsGroup", "Album ID: %1$d", "ID альбома: %1$d", "ID альбому: %1$d", "Альбом ID: %1$d");
+        add("MessageDetailsDc", "Data center: DC%1$d", "Дата-центр: DC%1$d", "Дата-центр: DC%1$d", "Дата-орталық: DC%1$d");
         add("ChatJumpToStart", "Go to earliest available message", "К самому раннему доступному сообщению", "До найранішого доступного повідомлення", "Ең ерте қолжетімді хабарламаға өту");
         add("AdminTools", "Admin tools", "Инструменты администратора", "Інструменти адміністратора", "Әкімші құралдары");
         add("AdminToolsTitle", "Chat moderation", "Модерация чата", "Модерація чату", "Чатты басқару");

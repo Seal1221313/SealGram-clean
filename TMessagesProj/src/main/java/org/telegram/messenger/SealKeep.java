@@ -90,6 +90,46 @@ public final class SealKeep {
         }
     }
 
+    public static void prepareReply(SendMessagesHelper.SendMessageParams p) {
+        try {
+            MessageObject r = p == null ? null : p.replyToMsg;
+            if (r == null || r.messageOwner == null || !isKept(r)) return;
+            CharSequence text = r.messageText;
+            boolean hasBody = !TextUtils.isEmpty(p.message) || !TextUtils.isEmpty(p.caption) || p.photo != null;
+            if (hasBody && !TextUtils.isEmpty(text)) {
+                String name = "";
+                if (!DialogObject.isUserDialog(p.peer)) {
+                    long from = r.getFromChatId();
+                    if (from > 0) {
+                        TLRPC.User u = MessagesController.getInstance(r.currentAccount).getUser(from);
+                        if (u != null) name = ContactsController.formatName(u.first_name, u.last_name) + "\n";
+                    } else if (from < 0) {
+                        TLRPC.Chat c = MessagesController.getInstance(r.currentAccount).getChat(-from);
+                        if (c != null && c.title != null) name = c.title + "\n";
+                    }
+                }
+                String flat = text.toString().replace('\n', ' ').trim();
+                if (flat.length() > 20) flat = flat.substring(0, 20) + "…";
+                String prefix = name + "> " + flat;
+                int shift = 0;
+                if (!TextUtils.isEmpty(p.message)) {
+                    p.message = prefix + "\n\n" + p.message;
+                    shift = prefix.length() + 2;
+                } else {
+                    boolean had = !TextUtils.isEmpty(p.caption);
+                    p.caption = had ? prefix + "\n\n" + p.caption : prefix;
+                    shift = had ? prefix.length() + 2 : 0;
+                }
+                if (shift > 0 && p.entities != null) {
+                    for (int i = 0; i < p.entities.size(); i++) p.entities.get(i).offset += shift;
+                }
+            }
+            p.replyToMsg = null;
+            p.replyQuote = null;
+        } catch (Throwable ignore) {
+        }
+    }
+
     private static synchronized void remember(ArrayList<String> keys) {
         load();
         long now = System.currentTimeMillis();
