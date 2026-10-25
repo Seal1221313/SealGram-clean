@@ -1096,6 +1096,10 @@ public class FileLoader extends BaseController {
     }
 
     private boolean canSaveToPublicStorage(Object parentObject) {
+    if (true) {
+        return true;
+    }
+
         if (BuildVars.NO_SCOPED_STORAGE) {
             return false;
         }
